@@ -41,9 +41,12 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+   otp: String,
+   otpExpiry: Date,
 },
 {
   timestamps: true,
 });
 
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+delete (mongoose.models as any).User;
+export default mongoose.model("User", UserSchema);
