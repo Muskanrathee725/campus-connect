@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid OTP" }, { status: 400 });
     }
 
-    if (new Date() > user.otpExpiry) {
+    if (!user.otpExpiry || new Date() > user.otpExpiry) {
       return NextResponse.json({ error: "OTP expired, please request a new one" }, { status: 400 });
     }
 
