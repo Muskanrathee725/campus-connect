@@ -17,11 +17,11 @@ export const authOptions: NextAuthOptions = {
         await connectDB();
         const existingUser = await User.findOne({ email: user.email });
         if (!existingUser) {
-          await User.create({
-            name: user.name,
-            email: user.email,
-            image: user.image,
-          });
+         await User.create({
+         name: user.name || "",
+         email: user.email || "",
+         image: user.image || "",
+     });
         }
         return true;
       } catch (error) {
