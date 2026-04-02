@@ -1,8 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Onboarding() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const [photo, setPhoto] = useState<string>("");
+  const [name, setName] = useState<string>("");
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("");
   const [year, setYear] = useState("");
@@ -10,6 +16,22 @@ export default function Onboarding() {
   const [specialization, setSpecialization] = useState("");
   const [techStack, setTechStack] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
+  const [linkedin, setLinkedin] = useState("");
+  const [github, setGithub] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [company, setCompany] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Auto fill name from Google
+  useEffect(() => {
+    if (session?.user?.name) {
+      setName(session.user.name);
+    }
+    // If already onboarded, go to dashboard
+    if (session?.user && (session.user as any).onboardingComplete) {
+      router.push("/dashboard");
+    }
+  }, [session]);
 
   const toggleItem = (item: string, list: string[], setList: Function) => {
     if (list.includes(item)) {
@@ -17,6 +39,37 @@ export default function Onboarding() {
     } else {
       setList([...list, item]);
     }
+  };
+
+  const handleFinish = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          role: role.toLowerCase(),
+          year,
+          branch,
+          specialization,
+          techStack,
+          interests,
+          linkedin,
+          github,
+          twitter,
+          company,
+          image: photo || session?.user?.image,
+        }),
+      });
+
+      if (res.ok) {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error saving onboarding data:", error);
+    }
+    setLoading(false);
   };
 
   return (
@@ -43,7 +96,13 @@ export default function Onboarding() {
 
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl font-bold overflow-hidden">
-                {photo ? <img src={photo} className="w-full h-full object-cover" /> : "M"}
+                {photo ? (
+                  <img src={photo} className="w-full h-full object-cover" />
+                ) : session?.user?.image ? (
+                  <img src={session.user.image} className="w-full h-full object-cover" />
+                ) : (
+                  name.charAt(0).toUpperCase() || "?"
+                )}
               </div>
               <label className="text-sm text-blue-600 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50 cursor-pointer">
                 Upload Photo
@@ -67,6 +126,8 @@ export default function Onboarding() {
               <label className="text-sm font-medium text-gray-700">Full Name</label>
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -131,10 +192,7 @@ export default function Onboarding() {
                 {["CSE", "ECE", "ME", "CE", "EE", "IT"].map((b) => (
                   <button
                     key={b}
-                    onClick={() => {
-                      setBranch(b);
-                      setSpecialization("");
-                    }}
+                    onClick={() => { setBranch(b); setSpecialization(""); }}
                     className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                       branch === b
                         ? "bg-blue-600 text-white border-blue-600"
@@ -147,12 +205,9 @@ export default function Onboarding() {
               </div>
             </div>
 
-            {/* Specialization - only shows if CSE selected */}
             {branch === "CSE" && (
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Specialization
-                </label>
+                <label className="text-sm font-medium text-gray-700">Specialization</label>
                 <div className="flex flex-wrap gap-2">
                   {["AI/ML", "Big Data", "Cloud Computing", "Cybersecurity", "IoT", "General"].map((spec) => (
                     <button
@@ -215,10 +270,7 @@ export default function Onboarding() {
             >
               Next →
             </button>
-            <button
-              onClick={() => setStep(1)}
-              className="text-sm text-gray-400 text-center"
-            >
+            <button onClick={() => setStep(1)} className="text-sm text-gray-400 text-center">
               ← Back
             </button>
           </div>
@@ -230,26 +282,46 @@ export default function Onboarding() {
             <h2 className="text-2xl font-bold text-gray-800">Social Info</h2>
             <p className="text-gray-500 text-sm -mt-3">Help others find you</p>
 
-            {["LinkedIn", "GitHub", "Twitter"].map((platform) => (
-              <div key={platform} className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">
-                  {platform} URL
-                </label>
-                <input
-                  type="text"
-                  placeholder={`Your ${platform} link`}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            ))}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">LinkedIn URL</label>
+              <input
+                type="text"
+                value={linkedin}
+                onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="Your LinkedIn link"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm  text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">GitHub URL</label>
+              <input
+                type="text"
+                value={github}
+                onChange={(e) => setGithub(e.target.value)}
+                placeholder="Your GitHub link"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm  text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Twitter URL</label>
+              <input
+                type="text"
+                value={twitter}
+                onChange={(e) => setTwitter(e.target.value)}
+                placeholder="Your Twitter link"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
             {role === "Alumni" && (
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">
-                  Current Company
-                </label>
+                <label className="text-sm font-medium text-gray-700">Current Company</label>
                 <input
                   type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
                   placeholder="Where do you work?"
                   className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -257,15 +329,13 @@ export default function Onboarding() {
             )}
 
             <button
-              onClick={() => (window.location.href = "/dashboard")}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-all mt-2"
+              onClick={handleFinish}
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-all mt-2 disabled:opacity-50"
             >
-              Finish 🎉
+              {loading ? "Saving..." : "Finish 🎉"}
             </button>
-            <button
-              onClick={() => setStep(2)}
-              className="text-sm text-gray-400 text-center"
-            >
+            <button onClick={() => setStep(2)} className="text-sm text-gray-400 text-center">
               ← Back
             </button>
           </div>
