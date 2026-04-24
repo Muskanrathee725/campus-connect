@@ -5,7 +5,6 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Connection from "@/models/Connection";
 
-// SEND a connection request
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,17 +15,16 @@ export async function POST(req: Request) {
     await connectDB();
 
     const { receiverId } = await req.json();
-    // Why only receiverId? — sender is always the logged in user
-    // never trust the frontend to send senderId
 
     const currentUser = await User.findOne({ email: session.user.email });
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    // Prevent sending request to yourself
     if (currentUser._id.toString() === receiverId) {
       return NextResponse.json({ error: "Cannot connect with yourself" }, { status: 400 });
     }
 
-    // Check if connection already exists
     const existing = await Connection.findOne({
       $or: [
         { sender: currentUser._id, receiver: receiverId },
@@ -52,7 +50,6 @@ export async function POST(req: Request) {
   }
 }
 
-// ACCEPT or REJECT a connection request
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -63,22 +60,22 @@ export async function PATCH(req: Request) {
     await connectDB();
 
     const { connectionId, action } = await req.json();
-    // action = "accepted" or "rejected"
 
     const currentUser = await User.findOne({ email: session.user.email });
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    // Find connection and make sure current user is the RECEIVER
-    // Why? — only receiver can accept/reject, not sender
     const connection = await Connection.findOne({
       _id: connectionId,
-      receiver: currentUser._id // security check
+      receiver: currentUser._id
     });
 
     if (!connection) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
 
-    connection.status = action; // "accepted" or "rejected"
+    connection.status = action;
     await connection.save();
 
     return NextResponse.json({ connection });
@@ -89,7 +86,6 @@ export async function PATCH(req: Request) {
   }
 }
 
-// REMOVE/CANCEL a connection
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -102,8 +98,10 @@ export async function DELETE(req: Request) {
     const { connectionId } = await req.json();
 
     const currentUser = await User.findOne({ email: session.user.email });
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    // Only sender or receiver can delete
     const connection = await Connection.findOne({
       _id: connectionId,
       $or: [
