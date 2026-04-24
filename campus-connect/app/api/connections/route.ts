@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const { receiverId } = await req.json();
 
-    const currentUser = await User.findOne({ email: session.user.email });
+    const currentUser = await User.findOne({ email: session.user.email }).lean() as any;
     if (!currentUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -61,7 +61,7 @@ export async function PATCH(req: Request) {
 
     const { connectionId, action } = await req.json();
 
-    const currentUser = await User.findOne({ email: session.user.email });
+    const currentUser = await User.findOne({ email: session.user.email }).lean() as any;
     if (!currentUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -97,7 +97,7 @@ export async function DELETE(req: Request) {
 
     const { connectionId } = await req.json();
 
-    const currentUser = await User.findOne({ email: session.user.email });
+    const currentUser = await User.findOne({ email: session.user.email }).lean() as any;
     if (!currentUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
