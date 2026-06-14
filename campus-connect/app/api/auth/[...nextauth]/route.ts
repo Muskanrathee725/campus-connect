@@ -13,15 +13,19 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
+      // TODO: re-enable domain check once testing is complete
+      // if (!user.email?.endsWith("@cuchd.in")) {
+      //   return "//?error=OnlyCUCHDEmailsAllowed";
+      // }
       try {
         await connectDB();
         const existingUser = await User.findOne({ email: user.email });
         if (!existingUser) {
-         await User.create({
-         name: user.name || "",
-         email: user.email || "",
-         image: user.image || "",
-     });
+          await User.create({
+            name: user.name || "",
+            email: user.email || "",
+            image: user.image || "",
+          });
         }
         return true;
       } catch (error) {

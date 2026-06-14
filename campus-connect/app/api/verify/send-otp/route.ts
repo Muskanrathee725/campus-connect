@@ -24,6 +24,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "UID is required" }, { status: 400 });
     }
 
+    // TODO: re-enable UID format validation once testing is complete
+    // const uidRegex = /^\d{2}[A-Z]{1,6}\d{4,7}$/;
+    // if (!uidRegex.test(uid.trim().toUpperCase())) {
+    //   return NextResponse.json(
+    //     { error: "Invalid UID format. Expected format: 23BAI70172 or 21BCE2367" },
+    //     { status: 400 }
+    //   );
+    // }
+
     await connectDB();
 
     // Check if UID already used by someone else

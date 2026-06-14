@@ -38,7 +38,7 @@ export default function Home() {
 
         {/* Footer */}
         <p className="text-xs text-gray-400 text-center">
-          Only @cuhd.in accounts are allowed
+          Only @cuchd.in accounts are allowed
         </p>
 
       </div>

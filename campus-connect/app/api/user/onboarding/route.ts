@@ -14,12 +14,26 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // Whitelist only safe onboarding fields — never spread full body into DB
+    const { name, role, year, branch, specialization, techStack, interests, linkedin, github, twitter, company, image } = body;
+
     await connectDB();
 
     await User.findOneAndUpdate(
       { email: session.user.email },
       {
-        ...body,
+        name,
+        role,
+        year,
+        branch,
+        specialization,
+        techStack,
+        interests,
+        linkedin,
+        github,
+        twitter,
+        company,
+        image,
         onboardingComplete: true,
       },
       { new: true }
