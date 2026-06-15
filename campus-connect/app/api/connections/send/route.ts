@@ -38,6 +38,14 @@ export async function POST(req: Request) {
     });
 
     if (existing) {
+      if (existing.status === "rejected") {
+        // Allow re-sending after rejection — reset to pending
+        existing.status = "pending";
+        existing.requester = me._id;
+        existing.recipient = recipientId;
+        await existing.save();
+        return NextResponse.json({ success: true, connection: existing });
+      }
       return NextResponse.json({ error: "Connection already exists" }, { status: 409 });
     }
 
