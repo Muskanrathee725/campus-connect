@@ -48,7 +48,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, connection });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 11000) {
+      return NextResponse.json({ error: "Connection already exists" }, { status: 409 });
+    }
     console.error("POST /api/connections/send error:", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
