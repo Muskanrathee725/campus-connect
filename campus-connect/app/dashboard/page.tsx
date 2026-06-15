@@ -1,5 +1,4 @@
 "use client";
-import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -24,206 +23,10 @@ type PendingRequest = {
 
 export default function Dashboard() {
   const { data: session } = useSession();
-  const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
   const isVerified = (session?.user as any)?.isVerified;
   const userName = session?.user?.name || "User";
   const userImage = session?.user?.image;
-
-  // Fetch all users on mount
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // Filter users when search or filter changes
-  useEffect(() => {
-    let result = [...users];
-
-    // Search filter
-    if (search) {
-      const s = search.toLowerCase();
-      result = result.filter(
-        (u) =>
-          u.name.toLowerCase().includes(s) ||
-          u.branch?.toLowerCase().includes(s) ||
-          u.role.toLowerCase().includes(s) ||
-          u.techStack.some((t) => t.toLowerCase().includes(s)) ||
-          u.interests.some((i) => i.toLowerCase().includes(s))
-      );
-    }
-
-    // Tab filter
-    if (activeFilter !== "All") {
-      result = result.filter(
-        (u) =>
-          u.branch === activeFilter ||
-          u.role.toLowerCase() === activeFilter.toLowerCase() ||
-          u.techStack.includes(activeFilter) ||
-          u.interests.includes(activeFilter)
-      );
-    }
-
-    setFilteredUsers(result);
-  }, [search, activeFilter, users]);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/users");
-      const data = await res.json();
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Send connection request
-  const handleConnect = async (receiverId: string) => {
-    setActionLoading(receiverId);
-    try {
-      const res = await fetch("/api/connections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ receiverId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        // Update UI instantly without refetching
-        setUsers((prev) =>
-          prev.map((u) =>
-            u._id === receiverId
-              ? { ...u, connectionStatus: "pending_sent", connectionId: data.connection._id }
-              : u
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error connecting:", error);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Accept or reject connection request
-  const handleResponse = async (connectionId: string, action: "accepted" | "rejected", userId: string) => {
-    setActionLoading(userId);
-    try {
-      const res = await fetch("/api/connections", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connectionId, action }),
-      });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u._id === userId
-              ? { ...u, connectionStatus: action === "accepted" ? "connected" : "none", connectionId: undefined }
-              : u
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error responding to connection:", error);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Cancel connection request or remove connection
-  const handleDisconnect = async (connectionId: string, userId: string) => {
-    setActionLoading(userId);
-    try {
-      const res = await fetch("/api/connections", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connectionId }),
-      });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u._id === userId
-              ? { ...u, connectionStatus: "none", connectionId: undefined }
-              : u
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error disconnecting:", error);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-
-  // Render the correct button based on connection status
-  const renderConnectionButton = (user: User) => {
-    const isLoading = actionLoading === user._id;
-
-    if (user.connectionStatus === "none") {
-      return (
-        <button
-          onClick={() => handleConnect(user._id)}
-          disabled={isLoading}
-          className="w-full py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all disabled:opacity-50"
-        >
-          {isLoading ? "..." : "+ Connect"}
-        </button>
-      );
-    }
-
-    if (user.connectionStatus === "pending_sent") {
-      return (
-        <button
-          onClick={() => handleDisconnect(user.connectionId!, user._id)}
-          disabled={isLoading}
-          className="w-full py-2 rounded-xl bg-yellow-100 text-yellow-700 text-sm font-medium hover:bg-yellow-200 transition-all disabled:opacity-50"
-        >
-          {isLoading ? "..." : "⏳ Pending"}
-        </button>
-      );
-    }
-
-    if (user.connectionStatus === "pending_received") {
-      return (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleResponse(user.connectionId!, "accepted", user._id)}
-            disabled={isLoading}
-            className="flex-1 py-2 rounded-xl bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-all disabled:opacity-50"
-          >
-            {isLoading ? "..." : "✓ Accept"}
-          </button>
-          <button
-            onClick={() => handleResponse(user.connectionId!, "rejected", user._id)}
-            disabled={isLoading}
-            className="flex-1 py-2 rounded-xl bg-red-100 text-red-600 text-sm font-medium hover:bg-red-200 transition-all disabled:opacity-50"
-          >
-            {isLoading ? "..." : "✕ Reject"}
-          </button>
-        </div>
-      );
-    }
-
-    if (user.connectionStatus === "connected") {
-      return (
-        <button
-          onClick={() => router.push(`/chat/${user._id}`)}
-          className="w-full py-2 rounded-xl bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-all"
-        >
-          💬 Message
-        </button>
-      );
-    }
-  };
+  const initials = userName.charAt(0).toUpperCase();
 
   const [users, setUsers] = useState<User[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -234,7 +37,6 @@ export default function Dashboard() {
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  // Fetch all users + annotated connection states
   async function fetchUsers() {
     try {
       const res = await fetch("/api/users");
@@ -247,7 +49,6 @@ export default function Dashboard() {
     }
   }
 
-  // Fetch pending requests sent to me
   async function fetchPendingRequests() {
     try {
       const res = await fetch("/api/connections/list?type=pending");
@@ -258,7 +59,6 @@ export default function Dashboard() {
     }
   }
 
-  // Fetch unread message counts per sender
   async function fetchUnreadCounts() {
     try {
       const res = await fetch("/api/messages/unread");
@@ -273,7 +73,6 @@ export default function Dashboard() {
     fetchUsers();
     fetchPendingRequests();
     fetchUnreadCounts();
-    // Poll every 10 seconds — refreshes connection states, pending requests, unread counts
     const interval = setInterval(() => {
       fetchUsers();
       fetchPendingRequests();
@@ -288,7 +87,6 @@ export default function Dashboard() {
   }
 
   async function handleConnect(recipientId: string) {
-    // Optimistic update — show Pending immediately
     setUsers((prev) =>
       prev.map((u) =>
         u._id === recipientId
@@ -307,7 +105,7 @@ export default function Dashboard() {
       } else {
         const data = await res.json();
         showToast(data.error || "Failed to send request", "error");
-        fetchUsers(); // revert optimistic update
+        fetchUsers();
       }
     } catch {
       showToast("Network error — please try again", "error");
@@ -322,7 +120,6 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requesterId, action }),
       });
-      // Refresh both lists
       fetchUsers();
       fetchPendingRequests();
     } catch (e) {
@@ -330,7 +127,6 @@ export default function Dashboard() {
     }
   }
 
-  // Filter + search logic
   const filterMap: Record<string, (u: User) => boolean> = {
     All: () => true,
     CSE: (u) => u.branch === "CSE",
@@ -419,8 +215,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* Toast notification */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all ${
           toast.type === "success" ? "bg-green-500" : "bg-red-500"
@@ -429,11 +223,9 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Navbar */}
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-600">Campus Connect</h1>
         <div className="flex items-center gap-3">
-          {/* Pending requests bell */}
           {pendingRequests.length > 0 && (
             <button
               onClick={() => setShowRequests(!showRequests)}
@@ -458,13 +250,12 @@ export default function Dashboard() {
             {userImage ? (
               <img src={userImage} alt="" className="w-full h-full object-cover" />
             ) : (
-              getInitials(userName)
+              initials
             )}
           </div>
         </div>
       </div>
 
-      {/* Pending requests dropdown */}
       {showRequests && pendingRequests.length > 0 && (
         <div className="max-w-6xl mx-auto px-6 pt-4">
           <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 mb-4">
@@ -517,7 +308,7 @@ export default function Dashboard() {
               Welcome, {userName.split(" ")[0]}! 👋
             </h2>
             <p className="text-gray-600 text-sm mt-1">
-              Connect with CUHD students, alumni and teachers
+              Connect with CU students, alumni and teachers
             </p>
           </div>
           <button
@@ -528,8 +319,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="mb-4">
+        <div className="mb-6">
           <input
             type="text"
             value={search}
@@ -539,7 +329,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-8">
           {["All", "CSE", "ECE", "ME", "Student", "Alumni", "AI/ML", "Web Dev"].map((f) => (
             <button
