@@ -17,6 +17,8 @@ const io = new Server(server, {
     origin: process.env.CLIENT_URL || "*",
     methods: ["GET", "POST"],
   },
+  // Default is 1MB — too small for a base64-encoded image/PDF attachment.
+  maxHttpBufferSize: 2 * 1024 * 1024,
 });
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
@@ -27,11 +29,23 @@ mongoose
   .catch((err) => console.error("MongoDB error:", err));
 
 // Message schema — kept minimal, same shape as Next.js models/Message.ts
+const AttachmentSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["image", "document"], required: true },
+    url: { type: String, required: true },
+    name: String,
+    mimeType: String,
+    size: Number,
+  },
+  { _id: false }
+);
+
 const MessageSchema = new mongoose.Schema(
   {
     sender: { type: mongoose.Schema.Types.ObjectId, required: true },
     recipient: { type: mongoose.Schema.Types.ObjectId, required: true },
-    content: { type: String, required: true },
+    content: { type: String, default: "" },
+    attachment: { type: AttachmentSchema, default: undefined },
     delivered: { type: Boolean, default: false },
     read: { type: Boolean, default: false },
   },
@@ -46,6 +60,55 @@ const Message =
   mongoose.models.Message || mongoose.model("Message", MessageSchema);
 
 // ── Socket.io ────────────────────────────────────────────────────────────────
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_DOC_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+];
+const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;
+
+function estimateBytesFromDataUrl(url) {
+  const base64 = url.slice(url.indexOf(",") + 1);
+  return Math.ceil((base64.length * 3) / 4);
+}
+
+// Validates an attachment the same way app/api/posts/route.ts does — the
+// client's own checks can always be bypassed, so this is the real gate.
+function validateAttachment(attachment) {
+  if (!attachment) return { ok: true, clean: undefined };
+  if (typeof attachment.url !== "string" || typeof attachment.mimeType !== "string") {
+    return { ok: false, error: "Invalid attachment" };
+  }
+  const allowedTypes =
+    attachment.type === "image"
+      ? ALLOWED_IMAGE_TYPES
+      : attachment.type === "document"
+      ? ALLOWED_DOC_TYPES
+      : null;
+  if (!allowedTypes || !allowedTypes.includes(attachment.mimeType)) {
+    return { ok: false, error: "Unsupported attachment type" };
+  }
+  if (!attachment.url.startsWith(`data:${attachment.mimeType};base64,`)) {
+    return { ok: false, error: "Invalid attachment encoding" };
+  }
+  if (estimateBytesFromDataUrl(attachment.url) > MAX_ATTACHMENT_BYTES) {
+    return { ok: false, error: "Attachment is too large (max 1.5MB)" };
+  }
+  return {
+    ok: true,
+    clean: {
+      type: attachment.type,
+      url: attachment.url,
+      name: typeof attachment.name === "string" ? attachment.name.slice(0, 200) : undefined,
+      mimeType: attachment.mimeType,
+      size: estimateBytesFromDataUrl(attachment.url),
+    },
+  };
+}
 
 // userId → socketId map so we can target specific users
 const onlineUsers = new Map();
@@ -66,9 +129,16 @@ io.on("connection", (socket) => {
   });
 
   // Client sends a message
-  // data: { senderId, recipientId, content }
-  socket.on("send_message", async ({ senderId, recipientId, content }) => {
-    if (!senderId || !recipientId || !content?.trim()) return;
+  // data: { senderId, recipientId, content, attachment? }
+  socket.on("send_message", async ({ senderId, recipientId, content, attachment }) => {
+    const trimmed = (content || "").trim();
+    if (!senderId || !recipientId || (!trimmed && !attachment)) return;
+
+    const { ok, error, clean } = validateAttachment(attachment);
+    if (!ok) {
+      socket.emit("message_error", { error });
+      return;
+    }
 
     try {
       // If the recipient's socket is registered right now, the emit below
@@ -80,7 +150,8 @@ io.on("connection", (socket) => {
       const message = await Message.create({
         sender: new mongoose.Types.ObjectId(senderId),
         recipient: new mongoose.Types.ObjectId(recipientId),
-        content: content.trim(),
+        content: trimmed,
+        attachment: clean,
         delivered,
       });
 
@@ -89,6 +160,7 @@ io.on("connection", (socket) => {
         sender: senderId,
         recipient: recipientId,
         content: message.content,
+        attachment: message.attachment,
         createdAt: message.createdAt,
         delivered,
         read: false,

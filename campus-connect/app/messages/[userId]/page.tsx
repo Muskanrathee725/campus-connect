@@ -4,15 +4,50 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { getSocket } from "@/lib/socket";
 
+type MediaItem = {
+  type: "image" | "document";
+  url: string;
+  name?: string;
+  mimeType?: string;
+  size?: number;
+};
+
 type Message = {
   _id: string;
   sender: string;
   recipient: string;
   content: string;
+  attachment?: MediaItem;
   createdAt: string;
   delivered: boolean;
   read: boolean;
 };
+
+const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;
+const ALLOWED_DOC_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+];
+const DOC_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx," + ALLOWED_DOC_TYPES.join(",");
+
+function formatBytes(bytes?: number) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 type OtherUser = {
   _id: string;
@@ -37,8 +72,12 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [connected, setConnected] = useState(false);
+  const [attachment, setAttachment] = useState<MediaItem | null>(null);
+  const [attachError, setAttachError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -138,26 +177,57 @@ export default function ChatPage() {
     };
     socket.on("messages_read", onMessagesRead);
 
+    // Server rejects an invalid/oversized attachment after we've already
+    // cleared it from the input — surface why instead of failing silently.
+    const onMessageError = ({ error }: { error: string }) => setAttachError(error);
+    socket.on("message_error", onMessageError);
+
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect");
       socket.off("receive_message", onMessage);
       socket.off("messages_read", onMessagesRead);
+      socket.off("message_error", onMessageError);
     };
   }, [myId, otherUserId]);
 
+  async function handleAttachFile(files: FileList | null, type: "image" | "document") {
+    const file = files?.[0];
+    if (!file) return;
+    setAttachError("");
+
+    if (type === "document" && !ALLOWED_DOC_TYPES.includes(file.type)) {
+      setAttachError("Supported documents: PDF, DOC, DOCX, PPT, PPTX.");
+      return;
+    }
+    if (type === "image" && !file.type.startsWith("image/")) {
+      setAttachError("Only image files are supported.");
+      return;
+    }
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setAttachError(`${file.name} is too large (max 1.5MB).`);
+      return;
+    }
+
+    const url = await readFileAsDataUrl(file);
+    setAttachment({ type, url, name: file.name, mimeType: file.type, size: file.size });
+  }
+
   function sendMessage() {
     const text = input.trim();
-    if (!text || !myId) return;
+    if ((!text && !attachment) || !myId) return;
 
     const socket = getSocket();
     socket.emit("send_message", {
       senderId: myId,
       recipientId: otherUserId,
       content: text,
+      attachment: attachment || undefined,
     });
 
     setInput("");
+    setAttachment(null);
+    setAttachError("");
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -264,7 +334,36 @@ export default function ChatPage() {
                       : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm shadow-sm"
                   }`}
                 >
-                  <p className="leading-relaxed">{msg.content}</p>
+                  {msg.content && <p className="leading-relaxed">{msg.content}</p>}
+                  {msg.attachment && (
+                    <div className={msg.content ? "mt-2" : ""}>
+                      {msg.attachment.type === "image" ? (
+                        <img
+                          src={msg.attachment.url}
+                          alt={msg.attachment.name || "attachment"}
+                          className="max-w-full max-h-64 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <a
+                          href={msg.attachment.url}
+                          download={msg.attachment.name}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`flex items-center gap-2 p-2 rounded-xl ${
+                            isMe ? "bg-blue-700" : "bg-gray-50 border border-gray-100"
+                          }`}
+                        >
+                          <span className="text-xl">📄</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{msg.attachment.name}</p>
+                            <p className={`text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
+                              {formatBytes(msg.attachment.size)}
+                            </p>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  )}
                   <p
                     className={`text-[10px] mt-1 flex items-center gap-1 ${
                       isMe ? "text-blue-200" : "text-gray-400"
@@ -286,25 +385,97 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message... (Enter to send)"
-          rows={1}
-          className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 overflow-y-auto"
-          style={{ minHeight: "44px" }}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!input.trim() || !connected}
-          className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-            <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" />
-          </svg>
-        </button>
+      <div className="bg-white border-t border-gray-100 px-4 py-3">
+        {attachError && <p className="text-xs text-red-500 mb-2">{attachError}</p>}
+
+        {attachment && (
+          <div className="relative inline-block mb-2">
+            {attachment.type === "image" ? (
+              <img
+                src={attachment.url}
+                alt={attachment.name}
+                className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+              />
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50">
+                <span className="text-lg">📄</span>
+                <div>
+                  <p className="text-xs font-medium text-gray-700 truncate max-w-[160px]">
+                    {attachment.name}
+                  </p>
+                  <p className="text-[10px] text-gray-400">{formatBytes(attachment.size)}</p>
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setAttachment(null)}
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center hover:bg-gray-900"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={!!attachment}
+            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            title="Attach photo"
+          >
+            🖼️
+          </button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              handleAttachFile(e.target.files, "image");
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => docInputRef.current?.click()}
+            disabled={!!attachment}
+            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            title="Attach document (PDF, DOC, PPT)"
+          >
+            📄
+          </button>
+          <input
+            ref={docInputRef}
+            type="file"
+            accept={DOC_ACCEPT}
+            hidden
+            onChange={(e) => {
+              handleAttachFile(e.target.files, "document");
+              e.target.value = "";
+            }}
+          />
+
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message... (Enter to send)"
+            rows={1}
+            className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 overflow-y-auto"
+            style={{ minHeight: "44px" }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={(!input.trim() && !attachment) || !connected}
+            className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
