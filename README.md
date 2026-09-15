@@ -1,3 +1,8 @@
+
+https://github.com/user-attachments/assets/6395dad0-1dac-40b5-b762-c9e1b5331b24
+
+
+
 # Campus Connect
 
 A real-time networking platform for Chandigarh University students, alumni, and faculty — search the student directory, send and accept connection requests, chat 1:1 in real time, and share a lightweight posts feed with image/document attachments.
