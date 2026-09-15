@@ -48,18 +48,39 @@ export default function ChatPage() {
   // Load chat history from API
   useEffect(() => {
     if (!otherUserId) return;
-    fetch(`/api/messages/${otherUserId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setMessages(data.messages || []);
-          setOtherUser(data.otherUser || null);
-        }
-      })
-      .catch(() => setError("Failed to load messages"))
-      .finally(() => setLoading(false));
+
+    function loadHistory() {
+      fetch(`/api/messages/${otherUserId}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setMessages(data.messages || []);
+            setOtherUser(data.otherUser || null);
+          }
+        })
+        .catch(() => setError("Failed to load messages"))
+        .finally(() => setLoading(false));
+    }
+
+    loadHistory();
+
+    // Next.js can reuse an already-rendered instance of this page when you
+    // navigate back into it (its client-side router cache) — the mount
+    // effect above won't fire again in that case, so this page would keep
+    // showing whatever was in memory when you left. Re-fetching on focus
+    // guarantees fresh history every time you actually look at the chat.
+    function onVisible() {
+      if (document.visibilityState === "visible") loadHistory();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", loadHistory);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", loadHistory);
+    };
   }, [otherUserId]);
 
   // Connect to Socket.io and register
