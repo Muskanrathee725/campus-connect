@@ -67,7 +67,7 @@ export default function Verify() {
 
   return (
     <div className="min-h-screen bg-campus-mesh flex items-center justify-center p-4">
-      <div className="bg-white rounded-[28px] shadow-[0_8px_30px_rgba(43,33,64,0.08)] p-8 w-full max-w-md flex flex-col gap-6">
+      <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-md flex flex-col gap-6">
 
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-display font-semibold text-ink">

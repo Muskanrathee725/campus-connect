@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 export default function Home() {
   return (
     <div className="min-h-screen bg-campus-mesh flex items-center justify-center px-4">
-      <div className="bg-white rounded-[28px] shadow-[0_8px_30px_rgba(43,33,64,0.08)] p-10 w-full max-w-md flex flex-col items-center gap-6">
+      <div className="bg-white rounded-2xl shadow-md p-10 w-full max-w-md flex flex-col items-center gap-6">
 
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">

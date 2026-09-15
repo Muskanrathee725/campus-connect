@@ -36,9 +36,5 @@ body {
 }
 
 .bg-campus-mesh {
-  background-color: #fffbf7;
-  background-image:
-    radial-gradient(circle at 10% 0%, #ffe8d6 0%, transparent 45%),
-    radial-gradient(circle at 95% 10%, #dcf3ef 0%, transparent 40%),
-    radial-gradient(circle at 50% 100%, #f1e6fb 0%, transparent 50%);
+  background-color: var(--color-cream);
 }

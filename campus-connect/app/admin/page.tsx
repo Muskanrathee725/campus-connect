@@ -106,7 +106,7 @@ export default function AdminPage() {
           className="w-full bg-white border border-hairline rounded-2xl px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral mb-6"
         />
 
-        <div className="bg-white rounded-[22px] border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)] overflow-x-auto">
+        <div className="bg-white rounded-2xl border border-hairline shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-hairline text-left text-muted">

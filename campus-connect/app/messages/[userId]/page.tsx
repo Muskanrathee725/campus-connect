@@ -273,7 +273,7 @@ export default function ChatPage() {
 
         {otherUser ? (
           <>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
               {otherUser.image ? (
                 <img src={otherUser.image} alt="" className="w-full h-full object-cover" />
               ) : (

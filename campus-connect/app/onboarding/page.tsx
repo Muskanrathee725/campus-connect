@@ -87,7 +87,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-campus-mesh flex items-center justify-center p-4">
-      <div className="bg-white rounded-[28px] shadow-[0_8px_30px_rgba(43,33,64,0.08)] p-8 w-full max-w-lg">
+      <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-lg">
 
         {/* Progress Bar */}
         <div className="flex gap-2 mb-8">
@@ -108,7 +108,7 @@ export default function Onboarding() {
             <p className="text-muted text-sm -mt-3">Tell us who you are</p>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white text-xl font-display font-semibold overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-coral flex items-center justify-center text-white text-xl font-display font-semibold overflow-hidden">
                 {photo ? (
                   <img src={photo} className="w-full h-full object-cover" />
                 ) : session?.user?.image ? (

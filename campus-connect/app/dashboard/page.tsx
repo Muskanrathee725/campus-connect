@@ -162,17 +162,12 @@ const TAG_COLORS = [
   { bg: "bg-lavender-bg", text: "text-lavender-text" },
 ];
 
-const AVATAR_GRADIENTS = [
-  "from-orange-300 to-coral",
-  "from-teal-200 to-teal-500",
-  "from-violet-300 to-violet-600",
-  "from-amber-200 to-amber-500",
-];
+const AVATAR_COLORS = ["bg-coral", "bg-mint-text", "bg-lavender-text", "bg-gold-text"];
 
-function avatarGradient(id: string) {
+function avatarColor(id: string) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }
 
 // Kept as a top-level component (not nested inside Dashboard) with its own
@@ -275,7 +270,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
   }
 
   return (
-    <div className="bg-white rounded-[22px] p-4 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)] mb-6">
+    <div className="bg-white rounded-2xl p-4 border border-hairline shadow-sm mb-6">
       <textarea
         ref={textareaRef}
         value={content}
@@ -463,7 +458,7 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
     return (
       <div className="flex flex-col gap-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-[22px] p-5 border border-hairline animate-pulse h-24" />
+          <div key={i} className="bg-white rounded-2xl p-5 border border-hairline animate-pulse h-24" />
         ))}
       </div>
     );
@@ -476,9 +471,9 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
   return (
     <div className="flex flex-col gap-4">
       {posts.map((post) => (
-        <div key={post._id} className="bg-white rounded-[22px] p-5 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)]">
+        <div key={post._id} className="bg-white rounded-2xl p-5 border border-hairline shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
               {post.author?.image ? (
                 <img src={post.author.image} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -829,7 +824,7 @@ export default function Dashboard() {
               ⚠️ Click to Verify
             </a>
           )}
-          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(userName)} flex items-center justify-center text-white text-sm font-display font-semibold overflow-hidden border-2 border-white shadow-sm`}>
+          <div className={`w-9 h-9 rounded-full ${avatarColor(userName)} flex items-center justify-center text-white text-sm font-display font-semibold overflow-hidden`}>
             {userImage ? (
               <img src={userImage} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -841,7 +836,7 @@ export default function Dashboard() {
 
       {showRequests && pendingRequests.length > 0 && (
         <div className="max-w-6xl mx-auto px-6 pt-4">
-          <div className="bg-white rounded-[22px] border border-hairline shadow-sm p-4 mb-4">
+          <div className="bg-white rounded-2xl border border-hairline shadow-sm p-4 mb-4">
             <h3 className="font-display font-semibold text-ink mb-3 text-sm">
               Connection Requests ({pendingRequests.length})
             </h3>
@@ -849,7 +844,7 @@ export default function Dashboard() {
               {pendingRequests.map((req) => (
                 <div key={req._id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(req.requester._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden`}>
+                    <div className={`w-9 h-9 rounded-full ${avatarColor(req.requester._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden`}>
                       {req.requester.image ? (
                         <img src={req.requester.image} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -903,7 +898,7 @@ export default function Dashboard() {
         </div>
 
         {!isVerified && (
-          <div className="bg-gold-bg border border-gold-text/20 rounded-[22px] p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-gold-bg border border-gold-text/20 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-sm text-gold-text">
               You're viewing a limited preview. <strong>Verify your CU UID</strong> to unlock the
               full student network — search, connect, and chat with CU students and alumni.
@@ -975,7 +970,7 @@ export default function Dashboard() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[22px] p-5 border border-hairline animate-pulse">
+              <div key={i} className="bg-white rounded-2xl p-5 border border-hairline animate-pulse">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-hairline" />
                   <div className="flex flex-col gap-2">
@@ -994,10 +989,10 @@ export default function Dashboard() {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className="bg-white rounded-[22px] p-5 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)] hover:shadow-[0_8px_24px_rgba(43,33,64,0.1)] transition-all"
+                className="bg-white rounded-2xl p-5 border border-hairline shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGradient(user._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden border-2 border-white shadow-sm`}>
+                  <div className={`w-12 h-12 rounded-full ${avatarColor(user._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden`}>
                     {user.image ? (
                       <img src={user.image} alt="" className="w-full h-full object-cover" />
                     ) : (
