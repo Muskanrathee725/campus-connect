@@ -32,6 +32,7 @@ const MessageSchema = new mongoose.Schema(
     sender: { type: mongoose.Schema.Types.ObjectId, required: true },
     recipient: { type: mongoose.Schema.Types.ObjectId, required: true },
     content: { type: String, required: true },
+    delivered: { type: Boolean, default: false },
     read: { type: Boolean, default: false },
   },
   { timestamps: true }
@@ -70,11 +71,17 @@ io.on("connection", (socket) => {
     if (!senderId || !recipientId || !content?.trim()) return;
 
     try {
+      // If the recipient's socket is registered right now, the emit below
+      // reaches them immediately — that's what "delivered" means here.
+      const recipientSocketId = onlineUsers.get(recipientId);
+      const delivered = !!recipientSocketId;
+
       // Persist to MongoDB
       const message = await Message.create({
         sender: new mongoose.Types.ObjectId(senderId),
         recipient: new mongoose.Types.ObjectId(recipientId),
         content: content.trim(),
+        delivered,
       });
 
       const payload = {
@@ -83,6 +90,7 @@ io.on("connection", (socket) => {
         recipient: recipientId,
         content: message.content,
         createdAt: message.createdAt,
+        delivered,
         read: false,
       };
 
@@ -90,7 +98,6 @@ io.on("connection", (socket) => {
       socket.emit("receive_message", payload);
 
       // Deliver to recipient if they are online
-      const recipientSocketId = onlineUsers.get(recipientId);
       if (recipientSocketId) {
         io.to(recipientSocketId).emit("receive_message", payload);
       }

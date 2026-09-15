@@ -10,6 +10,7 @@ type Message = {
   recipient: string;
   content: string;
   createdAt: string;
+  delivered: boolean;
   read: boolean;
 };
 
@@ -104,10 +105,23 @@ export default function ChatPage() {
 
     socket.on("receive_message", onMessage);
 
+    // Server emits this when the other person opens the chat and reads
+    // our messages — flip their ticks from delivered to read (blue).
+    const onMessagesRead = ({ by }: { by: string }) => {
+      if (by !== otherUserId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender === myId && m.recipient === otherUserId ? { ...m, read: true } : m
+        )
+      );
+    };
+    socket.on("messages_read", onMessagesRead);
+
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect");
       socket.off("receive_message", onMessage);
+      socket.off("messages_read", onMessagesRead);
     };
   }, [myId, otherUserId]);
 
@@ -231,11 +245,16 @@ export default function ChatPage() {
                 >
                   <p className="leading-relaxed">{msg.content}</p>
                   <p
-                    className={`text-[10px] mt-1 ${
+                    className={`text-[10px] mt-1 flex items-center gap-1 ${
                       isMe ? "text-blue-200" : "text-gray-400"
                     }`}
                   >
                     {formatTime(msg.createdAt)}
+                    {isMe && (
+                      <span className={msg.read ? "text-white" : "text-blue-200"}>
+                        {msg.read || msg.delivered ? "✓✓" : "✓"}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
