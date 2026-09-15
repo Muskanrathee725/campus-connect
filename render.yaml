@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: campus-connect-socket-server
+    runtime: node
+    rootDir: socket-server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_URL
+        value: https://campus-connect-nu-lovat.vercel.app
