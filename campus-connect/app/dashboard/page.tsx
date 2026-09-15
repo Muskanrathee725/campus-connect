@@ -614,7 +614,7 @@ export default function Dashboard() {
 
   async function fetchUsers() {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users", { cache: "no-store" });
       const data = await res.json();
       if (data.users) setUsers(data.users);
     } catch (e) {
@@ -626,7 +626,7 @@ export default function Dashboard() {
 
   async function fetchPendingRequests() {
     try {
-      const res = await fetch("/api/connections/list?type=pending");
+      const res = await fetch("/api/connections/list?type=pending", { cache: "no-store" });
       const data = await res.json();
       if (data.connections) setPendingRequests(data.connections);
     } catch (e) {
@@ -636,7 +636,7 @@ export default function Dashboard() {
 
   async function fetchUnreadCounts() {
     try {
-      const res = await fetch("/api/messages/unread");
+      const res = await fetch("/api/messages/unread", { cache: "no-store" });
       const data = await res.json();
       if (data.counts) setUnreadCounts(data.counts);
     } catch (e) {
@@ -646,7 +646,7 @@ export default function Dashboard() {
 
   async function fetchPosts() {
     try {
-      const res = await fetch("/api/posts");
+      const res = await fetch("/api/posts", { cache: "no-store" });
       const data = await res.json();
       if (data.posts) setPosts(data.posts);
     } catch (e) {

@@ -53,7 +53,11 @@ export async function POST(req: Request) {
         await existing.save();
         return NextResponse.json({ success: true, connection: existing });
       }
-      return NextResponse.json({ error: "Connection already exists" }, { status: 409 });
+      const message =
+        existing.status === "accepted"
+          ? "You're already connected"
+          : "Connection request already pending";
+      return NextResponse.json({ error: message }, { status: 409 });
     }
 
     const connection = await Connection.create({
