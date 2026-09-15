@@ -246,12 +246,12 @@ export default function ChatPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-campus-mesh flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">{error}</p>
+          <p className="text-muted mb-4">{error}</p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="text-blue-600 text-sm hover:underline"
+            className="text-coral text-sm hover:underline"
           >
             ← Back to Dashboard
           </button>
@@ -261,19 +261,19 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-campus-mesh">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+      <div className="bg-white border-b border-hairline px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.push("/dashboard")}
-          className="text-gray-500 hover:text-gray-800 text-sm mr-1"
+          className="text-muted hover:text-ink text-sm mr-1"
         >
           ←
         </button>
 
         {otherUser ? (
           <>
-            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
               {otherUser.image ? (
                 <img src={otherUser.image} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -281,8 +281,8 @@ export default function ChatPage() {
               )}
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">{otherUser.name}</p>
-              <p className="text-xs text-gray-500">
+              <p className="font-display font-semibold text-ink text-sm">{otherUser.name}</p>
+              <p className="text-xs text-muted">
                 {[otherUser.branch, otherUser.year ? `${otherUser.year} Year` : null]
                   .filter(Boolean)
                   .join(" • ")}
@@ -290,13 +290,13 @@ export default function ChatPage() {
             </div>
           </>
         ) : (
-          <div className="h-9 w-32 bg-gray-100 rounded animate-pulse" />
+          <div className="h-9 w-32 bg-hairline rounded animate-pulse" />
         )}
 
         {/* Online indicator */}
         <div className="ml-auto flex items-center gap-1.5">
-          <div className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-gray-300"}`} />
-          <span className="text-xs text-gray-400">{connected ? "Live" : "Connecting..."}</span>
+          <div className={`w-2 h-2 rounded-full ${connected ? "bg-mint-text" : "bg-hairline"}`} />
+          <span className="text-xs text-muted">{connected ? "Live" : "Connecting..."}</span>
         </div>
       </div>
 
@@ -309,13 +309,13 @@ export default function ChatPage() {
                 key={i}
                 className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
               >
-                <div className="h-9 w-48 bg-gray-200 rounded-2xl animate-pulse" />
+                <div className="h-9 w-48 bg-hairline rounded-2xl animate-pulse" />
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted text-sm">
               No messages yet. Say hi to {otherUser?.name?.split(" ")[0] ?? "them"}!
             </p>
           </div>
@@ -330,8 +330,8 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm ${
                     isMe
-                      ? "bg-blue-600 text-white rounded-br-sm"
-                      : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm shadow-sm"
+                      ? "bg-coral text-white rounded-br-sm"
+                      : "bg-white text-ink border border-hairline rounded-bl-sm shadow-sm"
                   }`}
                 >
                   {msg.content && <p className="leading-relaxed">{msg.content}</p>}
@@ -350,13 +350,13 @@ export default function ChatPage() {
                           target="_blank"
                           rel="noreferrer"
                           className={`flex items-center gap-2 p-2 rounded-xl ${
-                            isMe ? "bg-blue-700" : "bg-gray-50 border border-gray-100"
+                            isMe ? "bg-coral-dark" : "bg-cream border border-hairline"
                           }`}
                         >
                           <span className="text-xl">📄</span>
                           <div className="min-w-0">
                             <p className="text-xs font-medium truncate">{msg.attachment.name}</p>
-                            <p className={`text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
+                            <p className={`text-[10px] ${isMe ? "text-white/80" : "text-muted"}`}>
                               {formatBytes(msg.attachment.size)}
                             </p>
                           </div>
@@ -366,12 +366,12 @@ export default function ChatPage() {
                   )}
                   <p
                     className={`text-[10px] mt-1 flex items-center gap-1 ${
-                      isMe ? "text-blue-200" : "text-gray-400"
+                      isMe ? "text-white/80" : "text-muted"
                     }`}
                   >
                     {formatTime(msg.createdAt)}
                     {isMe && (
-                      <span className={msg.read ? "text-white" : "text-blue-200"}>
+                      <span className={msg.read ? "text-white" : "text-white/70"}>
                         {msg.read || msg.delivered ? "✓✓" : "✓"}
                       </span>
                     )}
@@ -385,8 +385,8 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-100 px-4 py-3">
-        {attachError && <p className="text-xs text-red-500 mb-2">{attachError}</p>}
+      <div className="bg-white border-t border-hairline px-4 py-3">
+        {attachError && <p className="text-xs text-coral-dark mb-2">{attachError}</p>}
 
         {attachment && (
           <div className="relative inline-block mb-2">
@@ -394,23 +394,23 @@ export default function ChatPage() {
               <img
                 src={attachment.url}
                 alt={attachment.name}
-                className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                className="w-20 h-20 object-cover rounded-lg border border-hairline"
               />
             ) : (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-hairline bg-cream">
                 <span className="text-lg">📄</span>
                 <div>
-                  <p className="text-xs font-medium text-gray-700 truncate max-w-[160px]">
+                  <p className="text-xs font-medium text-ink truncate max-w-[160px]">
                     {attachment.name}
                   </p>
-                  <p className="text-[10px] text-gray-400">{formatBytes(attachment.size)}</p>
+                  <p className="text-[10px] text-muted">{formatBytes(attachment.size)}</p>
                 </div>
               </div>
             )}
             <button
               type="button"
               onClick={() => setAttachment(null)}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center hover:bg-gray-900"
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white text-xs flex items-center justify-center hover:opacity-80"
             >
               ×
             </button>
@@ -422,7 +422,7 @@ export default function ChatPage() {
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={!!attachment}
-            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-muted hover:bg-cream disabled:opacity-30"
             title="Attach photo"
           >
             🖼️
@@ -441,7 +441,7 @@ export default function ChatPage() {
             type="button"
             onClick={() => docInputRef.current?.click()}
             disabled={!!attachment}
-            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-muted hover:bg-cream disabled:opacity-30"
             title="Attach document (PDF, DOC, PPT)"
           >
             📄
@@ -463,13 +463,13 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Type a message... (Enter to send)"
             rows={1}
-            className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 overflow-y-auto"
+            className="flex-1 resize-none border border-hairline rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral max-h-32 overflow-y-auto"
             style={{ minHeight: "44px" }}
           />
           <button
             onClick={sendMessage}
             disabled={(!input.trim() && !attachment) || !connected}
-            className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="w-10 h-10 bg-coral rounded-xl flex items-center justify-center text-white hover:bg-coral-dark transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
               <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" />

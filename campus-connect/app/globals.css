@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffbf7;
+  --foreground: #2b2140;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-fredoka);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Campus Connect palette — warm, playful, one primary accent (coral)
+     plus a small set of pastel tag colors for variety on cards. */
+  --color-cream: #fffbf7;
+  --color-ink: #2b2140;
+  --color-muted: #7a7189;
+  --color-coral: #e8563f;
+  --color-coral-dark: #c7442f;
+  --color-mint-bg: #def7e9;
+  --color-mint-text: #1e8a55;
+  --color-peach-bg: #ffe3dc;
+  --color-peach-text: #c7442f;
+  --color-gold-bg: #fff3d6;
+  --color-gold-text: #b8860b;
+  --color-lavender-bg: #e7e1fa;
+  --color-lavender-text: #6a4fc7;
+  --color-hairline: #eee6f4;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.bg-campus-mesh {
+  background-color: #fffbf7;
+  background-image:
+    radial-gradient(circle at 10% 0%, #ffe8d6 0%, transparent 45%),
+    radial-gradient(circle at 95% 10%, #dcf3ef 0%, transparent 40%),
+    radial-gradient(circle at 50% 100%, #f1e6fb 0%, transparent 50%);
 }

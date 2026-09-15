@@ -155,6 +155,26 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
+const TAG_COLORS = [
+  { bg: "bg-mint-bg", text: "text-mint-text" },
+  { bg: "bg-peach-bg", text: "text-peach-text" },
+  { bg: "bg-gold-bg", text: "text-gold-text" },
+  { bg: "bg-lavender-bg", text: "text-lavender-text" },
+];
+
+const AVATAR_GRADIENTS = [
+  "from-orange-300 to-coral",
+  "from-teal-200 to-teal-500",
+  "from-violet-300 to-violet-600",
+  "from-amber-200 to-amber-500",
+];
+
+function avatarGradient(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
+}
+
 // Kept as a top-level component (not nested inside Dashboard) with its own
 // local state, so typing in the textarea only re-renders this composer —
 // not the whole dashboard — and never unmounts/remounts on every keystroke.
@@ -255,7 +275,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-6">
+    <div className="bg-white rounded-[22px] p-4 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)] mb-6">
       <textarea
         ref={textareaRef}
         value={content}
@@ -263,7 +283,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
         placeholder="Share an update, project, or achievement..."
         rows={3}
         maxLength={2000}
-        className="w-full resize-none border-0 focus:outline-none text-sm text-gray-900 placeholder:text-gray-400"
+        className="w-full resize-none border-0 focus:outline-none text-sm text-ink placeholder:text-muted"
       />
 
       {media.length > 0 && (
@@ -277,15 +297,15 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
                   className="w-20 h-20 object-cover rounded-lg border border-gray-200"
                 />
               ) : (
-                <div className="w-40 h-20 flex flex-col justify-center px-3 rounded-lg border border-gray-200 bg-gray-50">
-                  <p className="text-xs font-medium text-gray-700 truncate">📄 {item.name}</p>
-                  <p className="text-[10px] text-gray-400">{formatBytes(item.size)}</p>
+                <div className="w-40 h-20 flex flex-col justify-center px-3 rounded-lg border border-hairline bg-cream">
+                  <p className="text-xs font-medium text-ink truncate">📄 {item.name}</p>
+                  <p className="text-[10px] text-muted">{formatBytes(item.size)}</p>
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => removeMedia(i)}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center hover:bg-gray-900"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white text-xs flex items-center justify-center hover:opacity-80"
               >
                 ×
               </button>
@@ -294,15 +314,15 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
         </div>
       )}
 
-      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-xs text-coral-dark mt-2">{error}</p>}
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-hairline">
         <div className="relative flex items-center gap-1">
           <button
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={media.length >= MAX_FILES}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:bg-cream disabled:opacity-30"
             title="Add photo"
           >
             🖼️
@@ -322,7 +342,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
             type="button"
             onClick={() => docInputRef.current?.click()}
             disabled={media.length >= MAX_FILES}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:bg-cream disabled:opacity-30"
             title="Add document (PDF, DOC, PPT)"
           >
             📄
@@ -344,20 +364,20 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
                 setShowEmoji((v) => !v);
                 setEmojiSearch("");
               }}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:bg-cream"
               title="Add emoji"
             >
               😊
             </button>
 
             {showEmoji && (
-              <div className="absolute top-full left-0 mt-2 z-20 w-72 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500">Emoji</span>
+              <div className="absolute top-full left-0 mt-2 z-20 w-72 rounded-xl border border-hairline bg-white shadow-lg overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-hairline">
+                  <span className="text-xs font-semibold text-muted">Emoji</span>
                   <button
                     type="button"
                     onClick={() => setShowEmoji(false)}
-                    className="text-gray-400 hover:text-gray-600 text-sm leading-none"
+                    className="text-muted hover:text-ink text-sm leading-none"
                   >
                     ✕
                   </button>
@@ -369,7 +389,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
                     value={emojiSearch}
                     onChange={(e) => setEmojiSearch(e.target.value)}
                     placeholder="Search emoji..."
-                    className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    className="w-full text-xs border border-hairline rounded-lg px-2 py-1.5 text-ink focus:outline-none focus:ring-1 focus:ring-coral"
                   />
                 </div>
 
@@ -382,7 +402,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
                         onClick={() => setEmojiCategoryIndex(i)}
                         title={cat.name}
                         className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${
-                          emojiCategoryIndex === i ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-gray-100"
+                          emojiCategoryIndex === i ? "bg-peach-bg ring-1 ring-coral" : "hover:bg-cream"
                         }`}
                       >
                         {cat.icon}
@@ -402,7 +422,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
 
                     if (visible.length === 0) {
                       return (
-                        <p className="col-span-8 text-center text-xs text-gray-400 py-4">
+                        <p className="col-span-8 text-center text-xs text-muted py-4">
                           No emoji found
                         </p>
                       );
@@ -414,7 +434,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
                         type="button"
                         onClick={() => insertEmoji(emoji)}
                         title={label}
-                        className="rounded p-1 text-lg hover:bg-gray-100"
+                        className="rounded p-1 text-lg hover:bg-cream"
                       >
                         {emoji}
                       </button>
@@ -429,7 +449,7 @@ function PostComposer({ onPost }: { onPost: (content: string, media: MediaItem[]
         <button
           onClick={handleSubmit}
           disabled={posting || (!content.trim() && media.length === 0)}
-          className="px-4 py-1.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-1.5 rounded-xl bg-coral text-white text-sm font-semibold hover:bg-coral-dark disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {posting ? "Posting..." : "Post"}
         </button>
@@ -443,22 +463,22 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
     return (
       <div className="flex flex-col gap-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse h-24" />
+          <div key={i} className="bg-white rounded-[22px] p-5 border border-hairline animate-pulse h-24" />
         ))}
       </div>
     );
   }
 
   if (posts.length === 0) {
-    return <p className="text-gray-500 text-sm text-center py-12">No posts yet.</p>;
+    return <p className="text-muted text-sm text-center py-12">No posts yet.</p>;
   }
 
   return (
     <div className="flex flex-col gap-4">
       {posts.map((post) => (
-        <div key={post._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div key={post._id} className="bg-white rounded-[22px] p-5 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)]">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden">
               {post.author?.image ? (
                 <img src={post.author.image} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -467,17 +487,17 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h3 className="font-semibold text-gray-900 text-sm">{post.author?.name}</h3>
-                {post.author?.isVerified && <span className="text-xs text-green-600">✅</span>}
+                <h3 className="font-display font-semibold text-ink text-sm">{post.author?.name}</h3>
+                {post.author?.isVerified && <span className="text-xs text-mint-text">✅</span>}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 {[post.author?.branch, post.author?.role].filter(Boolean).join(" • ")}
               </p>
             </div>
           </div>
 
           {post.content && (
-            <p className="text-sm text-gray-800 whitespace-pre-wrap mb-3">{post.content}</p>
+            <p className="text-sm text-ink whitespace-pre-wrap mb-3">{post.content}</p>
           )}
 
           {post.media && post.media.length > 0 && (
@@ -492,7 +512,7 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
                     key={i}
                     src={item.url}
                     alt={item.name || "attachment"}
-                    className="w-full max-h-96 object-cover rounded-xl border border-gray-100"
+                    className="w-full max-h-96 object-cover rounded-xl border border-hairline"
                   />
                 ) : (
                   <a
@@ -501,12 +521,12 @@ function PostsFeedList({ posts, loading }: { posts: Post[]; loading: boolean }) 
                     download={item.name}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-hairline bg-cream hover:bg-peach-bg"
                   >
                     <span className="text-2xl">📄</span>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-400">{formatBytes(item.size)}</p>
+                      <p className="text-sm font-medium text-ink truncate">{item.name}</p>
+                      <p className="text-xs text-muted">{formatBytes(item.size)}</p>
                     </div>
                   </a>
                 )
@@ -536,17 +556,17 @@ function ConnectButton({
       <div className="flex gap-2">
         <button
           disabled
-          className="flex-1 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium"
+          className="flex-1 py-2 rounded-2xl bg-mint-bg text-mint-text text-sm font-semibold"
         >
           ✓ Connected
         </button>
         <a
           href={`/messages/${user._id}`}
-          className="relative flex-1 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all text-center"
+          className="relative flex-1 py-2 rounded-2xl bg-coral text-white text-sm font-semibold hover:bg-coral-dark transition-all text-center"
         >
           💬 Message
           {unread > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-1.5 bg-coral-dark text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -558,7 +578,7 @@ function ConnectButton({
     return (
       <button
         disabled
-        className="w-full py-2 rounded-xl bg-gray-100 text-gray-500 text-sm font-medium"
+        className="w-full py-2 rounded-2xl bg-cream text-muted text-sm font-semibold"
       >
         Pending...
       </button>
@@ -569,13 +589,13 @@ function ConnectButton({
       <div className="flex gap-2">
         <button
           onClick={() => onRespond(user._id, "accept")}
-          className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+          className="flex-1 py-2 rounded-2xl bg-coral text-white text-sm font-semibold hover:bg-coral-dark"
         >
           Accept
         </button>
         <button
           onClick={() => onRespond(user._id, "reject")}
-          className="flex-1 py-2 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50"
+          className="flex-1 py-2 rounded-2xl border border-hairline text-muted text-sm font-semibold hover:bg-cream"
         >
           Ignore
         </button>
@@ -585,7 +605,7 @@ function ConnectButton({
   return (
     <button
       onClick={() => onConnect(user._id)}
-      className="w-full py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all"
+      className="w-full py-2 rounded-2xl bg-coral text-white text-sm font-semibold hover:bg-coral-dark transition-all"
     >
       + Connect
     </button>
@@ -766,22 +786,25 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-campus-mesh">
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all ${
-          toast.type === "success" ? "bg-green-500" : "bg-red-500"
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-lg text-sm font-medium text-white transition-all ${
+          toast.type === "success" ? "bg-mint-text" : "bg-coral-dark"
         }`}>
           {toast.msg}
         </div>
       )}
 
-      <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-600">Campus Connect</h1>
+      <div className="bg-white border-b border-hairline px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-coral flex items-center justify-center font-display font-bold text-white text-sm">CC</div>
+          <h1 className="text-lg font-display font-semibold text-ink">Campus Connect</h1>
+        </div>
         <div className="flex items-center gap-3">
           {isAdmin && (
             <a
               href="/admin"
-              className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium hover:bg-gray-200"
+              className="text-xs bg-lavender-bg text-lavender-text px-3 py-1.5 rounded-full font-semibold hover:opacity-80"
             >
               🛠️ Admin
             </a>
@@ -789,24 +812,24 @@ export default function Dashboard() {
           {pendingRequests.length > 0 && (
             <button
               onClick={() => setShowRequests(!showRequests)}
-              className="relative text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-medium hover:bg-blue-100"
+              className="relative text-sm bg-lavender-bg text-lavender-text px-3 py-1.5 rounded-full font-semibold hover:opacity-80"
             >
               🔔 {pendingRequests.length} Request{pendingRequests.length > 1 ? "s" : ""}
             </button>
           )}
           {isVerified ? (
-            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+            <span className="text-xs bg-mint-bg text-mint-text px-3 py-1 rounded-full font-semibold">
               ✅ Verified
             </span>
           ) : (
             <a
               href="/verify"
-              className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-medium hover:bg-yellow-200"
+              className="text-xs bg-gold-bg text-gold-text px-3 py-1 rounded-full font-semibold hover:opacity-80"
             >
               ⚠️ Click to Verify
             </a>
           )}
-          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold overflow-hidden">
+          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(userName)} flex items-center justify-center text-white text-sm font-display font-semibold overflow-hidden border-2 border-white shadow-sm`}>
             {userImage ? (
               <img src={userImage} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -818,15 +841,15 @@ export default function Dashboard() {
 
       {showRequests && pendingRequests.length > 0 && (
         <div className="max-w-6xl mx-auto px-6 pt-4">
-          <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 mb-4">
-            <h3 className="font-semibold text-gray-800 mb-3 text-sm">
+          <div className="bg-white rounded-[22px] border border-hairline shadow-sm p-4 mb-4">
+            <h3 className="font-display font-semibold text-ink mb-3 text-sm">
               Connection Requests ({pendingRequests.length})
             </h3>
             <div className="flex flex-col gap-3">
               {pendingRequests.map((req) => (
                 <div key={req._id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(req.requester._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden`}>
                       {req.requester.image ? (
                         <img src={req.requester.image} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -834,8 +857,8 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{req.requester.name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-medium text-ink">{req.requester.name}</p>
+                      <p className="text-xs text-muted">
                         {req.requester.branch} • {req.requester.year} Year
                       </p>
                     </div>
@@ -843,13 +866,13 @@ export default function Dashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleRespond(req.requester._id, "accept")}
-                      className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
+                      className="px-3 py-1.5 bg-coral text-white text-xs rounded-lg font-semibold hover:bg-coral-dark"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleRespond(req.requester._id, "reject")}
-                      className="px-3 py-1.5 border border-gray-200 text-gray-600 text-xs rounded-lg hover:bg-gray-50"
+                      className="px-3 py-1.5 border border-hairline text-muted text-xs rounded-lg font-semibold hover:bg-cream"
                     >
                       Ignore
                     </button>
@@ -864,30 +887,30 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-display font-semibold text-ink">
               Welcome, {userName.split(" ")[0]}! 👋
             </h2>
-            <p className="text-gray-600 text-sm mt-1">
+            <p className="text-muted text-sm mt-1">
               Connect with CU students, alumni and teachers
             </p>
           </div>
           <button
             onClick={() => { if (isVerified) { fetchUsers(); fetchPendingRequests(); } fetchPosts(); }}
-            className="text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 mt-1"
+            className="text-xs text-muted border border-hairline px-3 py-1.5 rounded-lg hover:bg-white mt-1"
           >
             ↻ Refresh
           </button>
         </div>
 
         {!isVerified && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <p className="text-sm text-yellow-800">
+          <div className="bg-gold-bg border border-gold-text/20 rounded-[22px] p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-sm text-gold-text">
               You're viewing a limited preview. <strong>Verify your CU UID</strong> to unlock the
               full student network — search, connect, and chat with CU students and alumni.
             </p>
             <a
               href="/verify"
-              className="shrink-0 px-4 py-2 rounded-xl bg-yellow-500 text-white text-sm font-medium hover:bg-yellow-600 text-center"
+              className="shrink-0 px-4 py-2 rounded-2xl bg-coral text-white text-sm font-semibold hover:bg-coral-dark text-center"
             >
               Verify Now
             </a>
@@ -900,10 +923,10 @@ export default function Dashboard() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-full border text-sm font-medium capitalize transition-all ${
+                className={`px-4 py-1.5 rounded-full border text-sm font-semibold capitalize transition-all ${
                   activeTab === tab
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                    ? "bg-ink text-white border-ink"
+                    : "bg-white border-hairline text-muted hover:border-coral hover:text-coral"
                 }`}
               >
                 {tab}
@@ -929,7 +952,7 @@ export default function Dashboard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, branch, skills..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full bg-white border border-hairline rounded-2xl px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral"
           />
         </div>
 
@@ -938,10 +961,10 @@ export default function Dashboard() {
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className={`px-4 py-1.5 rounded-full border text-sm transition-all ${
+              className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-all ${
                 activeFilter === f
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                  ? "bg-ink text-white border-ink"
+                  : "bg-white border-hairline text-muted hover:border-coral hover:text-coral"
               }`}
             >
               {f}
@@ -952,29 +975,29 @@ export default function Dashboard() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
+              <div key={i} className="bg-white rounded-[22px] p-5 border border-hairline animate-pulse">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-200" />
+                  <div className="w-12 h-12 rounded-full bg-hairline" />
                   <div className="flex flex-col gap-2">
-                    <div className="h-3 w-28 bg-gray-200 rounded" />
-                    <div className="h-2 w-20 bg-gray-100 rounded" />
+                    <div className="h-3 w-28 bg-hairline rounded" />
+                    <div className="h-2 w-20 bg-cream rounded" />
                   </div>
                 </div>
-                <div className="h-8 bg-gray-100 rounded-xl" />
+                <div className="h-8 bg-cream rounded-2xl" />
               </div>
             ))}
           </div>
         ) : filteredUsers.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-12">No users found.</p>
+          <p className="text-muted text-sm text-center py-12">No users found.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all"
+                className="bg-white rounded-[22px] p-5 border border-hairline shadow-[0_4px_18px_rgba(43,33,64,0.06)] hover:shadow-[0_8px_24px_rgba(43,33,64,0.1)] transition-all"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGradient(user._id)} flex items-center justify-center text-white font-display font-semibold text-sm overflow-hidden border-2 border-white shadow-sm`}>
                     {user.image ? (
                       <img src={user.image} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -983,12 +1006,12 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h3 className="font-semibold text-gray-900 text-sm">{user.name}</h3>
+                      <h3 className="font-display font-semibold text-ink text-sm">{user.name}</h3>
                       {user.isVerified && (
-                        <span className="text-xs text-green-600">✅</span>
+                        <span className="text-xs text-mint-text">✅</span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-muted">
                       {[user.branch, user.year ? `${user.year} Year` : null, user.role]
                         .filter(Boolean)
                         .join(" • ")}
@@ -998,10 +1021,10 @@ export default function Dashboard() {
 
                 {user.techStack && user.techStack.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
-                    {user.techStack.slice(0, 4).map((tech) => (
+                    {user.techStack.slice(0, 4).map((tech, i) => (
                       <span
                         key={tech}
-                        className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium"
+                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${TAG_COLORS[i % TAG_COLORS.length].bg} ${TAG_COLORS[i % TAG_COLORS.length].text}`}
                       >
                         {tech}
                       </span>
@@ -1011,10 +1034,10 @@ export default function Dashboard() {
 
                 {user.interests && user.interests.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {user.interests.slice(0, 3).map((interest) => (
+                    {user.interests.slice(0, 3).map((interest, i) => (
                       <span
                         key={interest}
-                        className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full"
+                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${TAG_COLORS[(i + 2) % TAG_COLORS.length].bg} ${TAG_COLORS[(i + 2) % TAG_COLORS.length].text}`}
                       >
                         {interest}
                       </span>

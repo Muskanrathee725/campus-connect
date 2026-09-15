@@ -72,9 +72,22 @@ export default function Onboarding() {
     setLoading(false);
   };
 
+  const pillClass = (active: boolean) =>
+    `flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+      active ? "bg-coral text-white border-coral" : "border-hairline text-muted hover:border-coral"
+    }`;
+
+  const chipClass = (active: boolean, activeColor = "bg-coral text-white border-coral") =>
+    `px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+      active ? activeColor : "border-hairline text-muted hover:border-coral"
+    }`;
+
+  const inputClass =
+    "border border-hairline rounded-xl px-4 py-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg">
+    <div className="min-h-screen bg-campus-mesh flex items-center justify-center p-4">
+      <div className="bg-white rounded-[28px] shadow-[0_8px_30px_rgba(43,33,64,0.08)] p-8 w-full max-w-lg">
 
         {/* Progress Bar */}
         <div className="flex gap-2 mb-8">
@@ -82,7 +95,7 @@ export default function Onboarding() {
             <div
               key={s}
               className={`h-1.5 flex-1 rounded-full transition-all ${
-                s <= step ? "bg-blue-600" : "bg-gray-200"
+                s <= step ? "bg-coral" : "bg-hairline"
               }`}
             />
           ))}
@@ -91,11 +104,11 @@ export default function Onboarding() {
         {/* Step 1 - Basic Info */}
         {step === 1 && (
           <div className="flex flex-col gap-5">
-            <h2 className="text-2xl font-bold text-gray-800">Basic Info</h2>
-            <p className="text-gray-500 text-sm -mt-3">Tell us who you are</p>
+            <h2 className="text-2xl font-display font-semibold text-ink">Basic Info</h2>
+            <p className="text-muted text-sm -mt-3">Tell us who you are</p>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl font-bold overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-coral flex items-center justify-center text-white text-xl font-display font-semibold overflow-hidden">
                 {photo ? (
                   <img src={photo} className="w-full h-full object-cover" />
                 ) : session?.user?.image ? (
@@ -104,7 +117,7 @@ export default function Onboarding() {
                   name.charAt(0).toUpperCase() || "?"
                 )}
               </div>
-              <label className="text-sm text-blue-600 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50 cursor-pointer">
+              <label className="text-sm text-coral border border-coral/30 px-4 py-2 rounded-lg hover:bg-peach-bg cursor-pointer font-medium">
                 Upload Photo
                 <input
                   type="file"
@@ -123,29 +136,21 @@ export default function Onboarding() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Full Name</label>
+              <label className="text-sm font-medium text-ink">Full Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">I am a</label>
+              <label className="text-sm font-medium text-ink">I am a</label>
               <div className="flex gap-3">
                 {["Student", "Alumni", "Teacher"].map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                      role === r
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-600 hover:border-blue-300"
-                    }`}
-                  >
+                  <button key={r} onClick={() => setRole(r)} className={pillClass(role === r)}>
                     {r}
                   </button>
                 ))}
@@ -153,18 +158,10 @@ export default function Onboarding() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Year</label>
+              <label className="text-sm font-medium text-ink">Year</label>
               <div className="flex gap-3">
                 {["1st", "2nd", "3rd", "4th"].map((y) => (
-                  <button
-                    key={y}
-                    onClick={() => setYear(y)}
-                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                      year === y
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-600 hover:border-blue-300"
-                    }`}
-                  >
+                  <button key={y} onClick={() => setYear(y)} className={pillClass(year === y)}>
                     {y}
                   </button>
                 ))}
@@ -173,7 +170,7 @@ export default function Onboarding() {
 
             <button
               onClick={() => setStep(2)}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-all mt-2"
+              className="w-full bg-coral text-white py-3 rounded-2xl font-semibold hover:bg-coral-dark transition-all mt-2"
             >
               Next →
             </button>
@@ -183,21 +180,17 @@ export default function Onboarding() {
         {/* Step 2 - Academic Info */}
         {step === 2 && (
           <div className="flex flex-col gap-5">
-            <h2 className="text-2xl font-bold text-gray-800">Academic Info</h2>
-            <p className="text-gray-500 text-sm -mt-3">Your branch and skills</p>
+            <h2 className="text-2xl font-display font-semibold text-ink">Academic Info</h2>
+            <p className="text-muted text-sm -mt-3">Your branch and skills</p>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Branch</label>
+              <label className="text-sm font-medium text-ink">Branch</label>
               <div className="flex flex-wrap gap-2">
                 {["CSE", "ECE", "ME", "CE", "EE", "IT"].map((b) => (
                   <button
                     key={b}
                     onClick={() => { setBranch(b); setSpecialization(""); }}
-                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                      branch === b
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-600 hover:border-blue-300"
-                    }`}
+                    className={chipClass(branch === b)}
                   >
                     {b}
                   </button>
@@ -207,17 +200,13 @@ export default function Onboarding() {
 
             {branch === "CSE" && (
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-700">Specialization</label>
+                <label className="text-sm font-medium text-ink">Specialization</label>
                 <div className="flex flex-wrap gap-2">
                   {["AI/ML", "Big Data", "Cloud Computing", "Cybersecurity", "IoT", "General"].map((spec) => (
                     <button
                       key={spec}
                       onClick={() => setSpecialization(spec)}
-                      className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                        specialization === spec
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-gray-200 text-gray-600 hover:border-indigo-300"
-                      }`}
+                      className={chipClass(specialization === spec, "bg-lavender-text text-white border-lavender-text")}
                     >
                       {spec}
                     </button>
@@ -227,17 +216,13 @@ export default function Onboarding() {
             )}
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Tech Stack</label>
+              <label className="text-sm font-medium text-ink">Tech Stack</label>
               <div className="flex flex-wrap gap-2">
                 {["React", "Next.js", "Python", "Java", "C++", "Node.js", "MongoDB", "SQL"].map((tech) => (
                   <button
                     key={tech}
                     onClick={() => toggleItem(tech, techStack, setTechStack)}
-                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                      techStack.includes(tech)
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-600 hover:border-blue-300"
-                    }`}
+                    className={chipClass(techStack.includes(tech))}
                   >
                     {tech}
                   </button>
@@ -246,17 +231,13 @@ export default function Onboarding() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Interests</label>
+              <label className="text-sm font-medium text-ink">Interests</label>
               <div className="flex flex-wrap gap-2">
                 {["Web Dev", "AI/ML", "DSA", "Cybersecurity", "Cloud", "App Dev", "UI/UX"].map((interest) => (
                   <button
                     key={interest}
                     onClick={() => toggleItem(interest, interests, setInterests)}
-                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                      interests.includes(interest)
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-600 hover:border-blue-300"
-                    }`}
+                    className={chipClass(interests.includes(interest))}
                   >
                     {interest}
                   </button>
@@ -266,11 +247,11 @@ export default function Onboarding() {
 
             <button
               onClick={() => setStep(3)}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-all mt-2"
+              className="w-full bg-coral text-white py-3 rounded-2xl font-semibold hover:bg-coral-dark transition-all mt-2"
             >
               Next →
             </button>
-            <button onClick={() => setStep(1)} className="text-sm text-gray-400 text-center">
+            <button onClick={() => setStep(1)} className="text-sm text-muted text-center">
               ← Back
             </button>
           </div>
@@ -279,51 +260,51 @@ export default function Onboarding() {
         {/* Step 3 - Social Info */}
         {step === 3 && (
           <div className="flex flex-col gap-5">
-            <h2 className="text-2xl font-bold text-gray-800">Social Info</h2>
-            <p className="text-gray-500 text-sm -mt-3">Help others find you</p>
+            <h2 className="text-2xl font-display font-semibold text-ink">Social Info</h2>
+            <p className="text-muted text-sm -mt-3">Help others find you</p>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">LinkedIn URL</label>
+              <label className="text-sm font-medium text-ink">LinkedIn URL</label>
               <input
                 type="text"
                 value={linkedin}
                 onChange={(e) => setLinkedin(e.target.value)}
                 placeholder="Your LinkedIn link"
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm  text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">GitHub URL</label>
+              <label className="text-sm font-medium text-ink">GitHub URL</label>
               <input
                 type="text"
                 value={github}
                 onChange={(e) => setGithub(e.target.value)}
                 placeholder="Your GitHub link"
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm  text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Twitter URL</label>
+              <label className="text-sm font-medium text-ink">Twitter URL</label>
               <input
                 type="text"
                 value={twitter}
                 onChange={(e) => setTwitter(e.target.value)}
                 placeholder="Your Twitter link"
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             {role === "Alumni" && (
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Current Company</label>
+                <label className="text-sm font-medium text-ink">Current Company</label>
                 <input
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="Where do you work?"
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
             )}
@@ -331,11 +312,11 @@ export default function Onboarding() {
             <button
               onClick={handleFinish}
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-all mt-2 disabled:opacity-50"
+              className="w-full bg-coral text-white py-3 rounded-2xl font-semibold hover:bg-coral-dark transition-all mt-2 disabled:opacity-50"
             >
               {loading ? "Saving..." : "Finish 🎉"}
             </button>
-            <button onClick={() => setStep(2)} className="text-sm text-gray-400 text-center">
+            <button onClick={() => setStep(2)} className="text-sm text-muted text-center">
               ← Back
             </button>
           </div>
