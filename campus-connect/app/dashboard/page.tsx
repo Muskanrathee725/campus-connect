@@ -21,9 +21,17 @@ type PendingRequest = {
   requester: { _id: string; name: string; image?: string; branch?: string; year?: string; role?: string };
 };
 
+type Post = {
+  _id: string;
+  content: string;
+  createdAt: string;
+  author: { _id: string; name: string; image?: string; role?: string; branch?: string; year?: string; isVerified?: boolean };
+};
+
 export default function Dashboard() {
   const { data: session } = useSession();
   const isVerified = (session?.user as any)?.isVerified;
+  const isAdmin = (session?.user as any)?.isAdmin;
   const userName = session?.user?.name || "User";
   const userImage = session?.user?.image;
   const initials = userName.charAt(0).toUpperCase();
@@ -36,6 +44,11 @@ export default function Dashboard() {
   const [showRequests, setShowRequests] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [activeTab, setActiveTab] = useState<"network" | "posts">("network");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postContent, setPostContent] = useState("");
+  const [posting, setPosting] = useState(false);
 
   async function fetchUsers() {
     try {
@@ -69,17 +82,61 @@ export default function Dashboard() {
     }
   }
 
+  async function fetchPosts() {
+    try {
+      const res = await fetch("/api/posts");
+      const data = await res.json();
+      if (data.posts) setPosts(data.posts);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPostsLoading(false);
+    }
+  }
+
+  async function handleCreatePost() {
+    const content = postContent.trim();
+    if (!content) return;
+    setPosting(true);
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPostContent("");
+        fetchPosts();
+      } else {
+        showToast(data.error || "Failed to post", "error");
+      }
+    } catch {
+      showToast("Network error — please try again", "error");
+    } finally {
+      setPosting(false);
+    }
+  }
+
   useEffect(() => {
-    fetchUsers();
-    fetchPendingRequests();
-    fetchUnreadCounts();
-    const interval = setInterval(() => {
+    if (isVerified) {
       fetchUsers();
       fetchPendingRequests();
       fetchUnreadCounts();
+    } else {
+      setLoading(false);
+    }
+    fetchPosts();
+    const interval = setInterval(() => {
+      if (isVerified) {
+        fetchUsers();
+        fetchPendingRequests();
+        fetchUnreadCounts();
+      }
+      fetchPosts();
     }, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isVerified]);
 
   function showToast(msg: string, type: "success" | "error") {
     setToast({ msg, type });
@@ -213,6 +270,70 @@ export default function Dashboard() {
     );
   }
 
+  function PostsFeed({ canPost }: { canPost: boolean }) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        {canPost && (
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-6">
+            <textarea
+              value={postContent}
+              onChange={(e) => setPostContent(e.target.value)}
+              placeholder="Share an update, project, or achievement..."
+              rows={3}
+              maxLength={2000}
+              className="w-full resize-none border-0 focus:outline-none text-sm text-gray-900 placeholder:text-gray-400"
+            />
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={handleCreatePost}
+                disabled={posting || !postContent.trim()}
+                className="px-4 py-1.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {posting ? "Posting..." : "Post"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {postsLoading ? (
+          <div className="flex flex-col gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse h-24" />
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-12">No posts yet.</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {posts.map((post) => (
+              <div key={post._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+                    {post.author?.image ? (
+                      <img src={post.author.image} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      post.author?.name?.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-semibold text-gray-900 text-sm">{post.author?.name}</h3>
+                      {post.author?.isVerified && <span className="text-xs text-green-600">✅</span>}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {[post.author?.branch, post.author?.role].filter(Boolean).join(" • ")}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{post.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
@@ -226,6 +347,14 @@ export default function Dashboard() {
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-600">Campus Connect</h1>
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <a
+              href="/admin"
+              className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium hover:bg-gray-200"
+            >
+              🛠️ Admin
+            </a>
+          )}
           {pendingRequests.length > 0 && (
             <button
               onClick={() => setShowRequests(!showRequests)}
@@ -312,13 +441,52 @@ export default function Dashboard() {
             </p>
           </div>
           <button
-            onClick={() => { fetchUsers(); fetchPendingRequests(); }}
+            onClick={() => { if (isVerified) { fetchUsers(); fetchPendingRequests(); } fetchPosts(); }}
             className="text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 mt-1"
           >
             ↻ Refresh
           </button>
         </div>
 
+        {!isVerified && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-sm text-yellow-800">
+              You're viewing a limited preview. <strong>Verify your CU UID</strong> to unlock the
+              full student network — search, connect, and chat with CU students and alumni.
+            </p>
+            <a
+              href="/verify"
+              className="shrink-0 px-4 py-2 rounded-xl bg-yellow-500 text-white text-sm font-medium hover:bg-yellow-600 text-center"
+            >
+              Verify Now
+            </a>
+          </div>
+        )}
+
+        {isVerified && (
+          <div className="flex gap-2 mb-6">
+            {(["network", "posts"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1.5 rounded-full border text-sm font-medium capitalize transition-all ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!isVerified ? (
+          <PostsFeed canPost={false} />
+        ) : activeTab === "posts" ? (
+          <PostsFeed canPost={true} />
+        ) : (
+          <>
         <div className="mb-6">
           <input
             type="text"
@@ -422,6 +590,8 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

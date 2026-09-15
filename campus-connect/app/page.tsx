@@ -38,7 +38,7 @@ export default function Home() {
 
         {/* Footer */}
         <p className="text-xs text-gray-400 text-center">
-          Only @cuchd.in accounts are allowed
+          Sign in, then verify your CU UID to unlock full access
         </p>
 
       </div>

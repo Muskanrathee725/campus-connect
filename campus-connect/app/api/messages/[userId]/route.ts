@@ -27,6 +27,13 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (!me.isVerified) {
+      return NextResponse.json(
+        { error: "Verify your CU UID to access messages" },
+        { status: 403 }
+      );
+    }
+
     // Only allow chat between accepted connections
     const connection = await Connection.findOne({
       $or: [

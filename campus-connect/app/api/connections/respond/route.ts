@@ -26,6 +26,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (!me.isVerified) {
+      return NextResponse.json(
+        { error: "Verify your CU UID to respond to connection requests" },
+        { status: 403 }
+      );
+    }
+
     // Find the pending request sent TO me BY requesterId
     const connection = await Connection.findOne({
       requester: requesterId,

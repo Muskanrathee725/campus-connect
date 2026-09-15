@@ -21,6 +21,13 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (!me.isVerified) {
+      return NextResponse.json(
+        { error: "Verify your CU UID to access the network" },
+        { status: 403 }
+      );
+    }
+
     // All users except self, only return safe public fields
     const users = await User.find(
       { _id: { $ne: me._id } },

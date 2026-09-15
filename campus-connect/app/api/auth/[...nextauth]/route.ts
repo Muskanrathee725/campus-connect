@@ -13,10 +13,8 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-      // TODO: re-enable domain check once testing is complete
-      // if (!user.email?.endsWith("@cuchd.in")) {
-      //   return "//?error=OnlyCUCHDEmailsAllowed";
-      // }
+      // CU affiliation is proven by the UID+OTP flow after login, not by the
+      // Google account's domain — students sign in with personal Gmail accounts.
       try {
         await connectDB();
         const existingUser = await User.findOne({ email: user.email });
@@ -41,6 +39,8 @@ export const authOptions: NextAuthOptions = {
           (session.user as any).id = dbUser._id.toString();
           (session.user as any).isVerified = dbUser.isVerified;
           (session.user as any).onboardingComplete = dbUser.onboardingComplete;
+          (session.user as any).isAdmin =
+            !!process.env.ADMIN_EMAIL && dbUser.email === process.env.ADMIN_EMAIL;
         }
         return session;
       } catch (error) {

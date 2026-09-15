@@ -15,12 +15,11 @@ export default function Verify() {
       setError("Please enter your UID");
       return;
     }
-    // TODO: re-enable client-side UID format check once testing is complete
-    // const uidRegex = /^\d{2}[A-Z]{1,6}\d{4,7}$/;
-    // if (!uidRegex.test(uid.trim().toUpperCase())) {
-    //   setError("Invalid UID. Format: 23BAI70172 or 21BCE2367 (year + program + roll number)");
-    //   return;
-    // }
+    const uidRegex = /^\d{2}[A-Z]{1,6}\d{4,7}$/;
+    if (!uidRegex.test(uid.trim().toUpperCase())) {
+      setError("Invalid UID. Format: 23BAI70172 or 21BCE2367 (year + program + roll number)");
+      return;
+    }
     setLoading(true);
     setError("");
     try {

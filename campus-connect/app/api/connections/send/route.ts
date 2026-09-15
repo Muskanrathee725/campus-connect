@@ -25,6 +25,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (!me.isVerified) {
+      return NextResponse.json(
+        { error: "Verify your CU UID to send connection requests" },
+        { status: 403 }
+      );
+    }
+
     if (me._id.toString() === recipientId) {
       return NextResponse.json({ error: "Cannot connect with yourself" }, { status: 400 });
     }
